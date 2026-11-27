@@ -1,0 +1,337 @@
+{
+  "info": {
+    "name": "COMMUNITY 360 - API REST y Pruebas en Tiempo Real",
+    "_postman_id": "c360-final-collection-2026",
+    "description": "Colección oficial para autenticación segura (sesión + CSRF), consultas históricas y demostración en tiempo real (POST, PUT, DELETE) sobre TiDB Cloud y Couchbase Capella.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "csrf_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_correo",
+      "value": "lizandro.reyes@utmetropolitana.edu.mx",
+      "type": "string"
+    },
+    {
+      "key": "admin_password",
+      "value": "CAMBIAR_ANTES_DE_EJECUTAR",
+      "type": "string"
+    },
+    {
+      "key": "test_id_interaccion",
+      "value": "TEST_POSTMAN_001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Autenticación y CSRF",
+      "item": [
+        {
+          "name": "0.1 Obtener Token CSRF inicial",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "const data = pm.response.json();",
+                  "if (data.csrfToken) {",
+                  "  pm.collectionVariables.set('csrf_token', data.csrfToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/csrf",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "csrf"]
+            }
+          }
+        },
+        {
+          "name": "0.2 Iniciar Sesión (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login exitoso 200 OK', function () { pm.response.to.have.status(200); });",
+                  "const xsrf = pm.cookies.get('XSRF-TOKEN');",
+                  "if (xsrf) {",
+                  "  pm.collectionVariables.set('csrf_token', decodeURIComponent(xsrf));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{admin_correo}}\",\n  \"password\": \"{{admin_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "0.3 Verificar Sesión Activa (/me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Consultas Históricas (Dashboard)",
+      "item": [
+        {
+          "name": "GET /api/dashboard/estado",
+          "request": { "method": "GET", "url": "{{base_url}}/api/dashboard/estado" }
+        },
+        {
+          "name": "GET /api/dashboard/resumen",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/resumen",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "resumen"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/dashboard/temas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/temas",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "temas"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/dashboard/participacion",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/participacion",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "participacion"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/dashboard/actividad",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/actividad",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "actividad"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/dashboard/canales",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/canales",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "canales"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/interacciones (Paginación)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/interacciones?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "interacciones"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Pruebas Obligatorias en Tiempo Real",
+      "item": [
+        {
+          "name": "Prueba 1 - POST Crear Interacción de Prueba",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Interacción creada HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "const data = pm.response.json();",
+                  "pm.test('ID coincide con prueba', function () { pm.expect(data.interaccion.id_interaccion).to.eql(pm.collectionVariables.get('test_id_interaccion')); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-CSRF-Token", "value": "{{csrf_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_interaccion\": \"{{test_id_interaccion}}\",\n  \"id_usuario\": \"U000852\",\n  \"timestamp\": \"2026-11-26T18:30:00Z\",\n  \"canal\": \"Discord\",\n  \"tipo\": \"comentario\",\n  \"texto\": \"Interacción de prueba en tiempo real desde Postman\",\n  \"tema\": \"musica\",\n  \"sentimiento\": 0.85,\n  \"idioma\": \"es\",\n  \"dispositivo\": \"Web\",\n  \"reacciones_recibidas\": 4,\n  \"etiquetas\": [\"prueba\", \"tiempo_real\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/interacciones",
+              "host": ["{{base_url}}"],
+              "path": ["api", "interacciones"]
+            }
+          }
+        },
+        {
+          "name": "Prueba 2 - PUT Modificar Interacción de Prueba",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Interacción actualizada HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "const data = pm.response.json();",
+                  "pm.test('Tipo actualizado a rsvp_evento', function () { pm.expect(data.interaccion.tipo).to.eql('rsvp_evento'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-CSRF-Token", "value": "{{csrf_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"rsvp_evento\",\n  \"canal\": \"Telegram\",\n  \"tema\": \"videojuegos\",\n  \"texto\": \"Interacción modificada desde Postman para verificar recálculo\",\n  \"sentimiento\": -0.25,\n  \"reacciones_recibidas\": 10,\n  \"etiquetas\": [\"prueba\", \"modificada\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/interacciones/{{test_id_interaccion}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "interacciones", "{{test_id_interaccion}}"]
+            }
+          }
+        },
+        {
+          "name": "Prueba 3 - DELETE Eliminar Interacción de Prueba",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Interacción eliminada HTTP 200', function () { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "X-CSRF-Token", "value": "{{csrf_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/interacciones/{{test_id_interaccion}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "interacciones", "{{test_id_interaccion}}"]
+            }
+          }
+        },
+        {
+          "name": "Verificación Post-Eliminación (404 esperado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Registro ya no existe HTTP 404', function () { pm.response.to.have.status(404); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/interacciones/{{test_id_interaccion}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "interacciones", "{{test_id_interaccion}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Cierre de Sesión",
+      "item": [
+        {
+          "name": "POST /api/auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-CSRF-Token", "value": "{{csrf_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
